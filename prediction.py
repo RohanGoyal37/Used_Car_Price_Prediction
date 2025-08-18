@@ -48,5 +48,8 @@ def app(df):
         st.info(f"Accuracy of Our Model is {round(acc, 2)}")
         st.info(f"R-squared score of this model is: {rsquare_score:.2}")
         st.info(f"Mean absolute error of this model is: {mae:.3f}")
-        st.info(f"Mean squared log error of this model is: {msle:.3f}")
+        if msle is not None:
+            st.info(f"Mean squared log error of this model is: {msle:.3f}")
+        else:
+            st.warning("Mean squared log error (MSLE) is not available due to negative values in predictions or targets.")
         st.info(f"Root mean squared error of this model is: {rmse:.3f}")
