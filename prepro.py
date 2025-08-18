@@ -8,7 +8,7 @@ import numpy as np
 # Import Dataset
 df = pd.read_csv('Car details v3.csv')
 
-@st.cache_data
+@st.cache
 def load_data():
     data = df.copy()
 
@@ -54,6 +54,6 @@ def load_data():
     return X, y, data
 
 # Creating a function for DataFrame
-@st.cache_data
+@st.cache
 def DataFrame():
     return load_data()[2]
