@@ -1,57 +1,59 @@
-#importing Libraries
+# Improved Preprocessing
 import pandas as pd
 import streamlit as st
 from sklearn.preprocessing import LabelEncoder
 from xgboost import XGBRegressor
+import numpy as np
 
 # Import Dataset
 df = pd.read_csv('Car details v3.csv')
 
-@st.cache(hash_funcs={XGBRegressor: id})
+@st.cache_data
 def load_data():
+    data = df.copy()
 
-    # dropping these features Coz it has no major scope in the predictions
-    df.drop(['torque','name','engine','seller_type','fuel'],axis=1,inplace=True)
+    # Extract brand from name
+    data['brand'] = data['name'].str.split().str[0]
 
+    # Convert engine to numeric (remove 'CC')
+    data['engine'] = data['engine'].str.replace('CC', '', regex=False)
+    data['engine'] = pd.to_numeric(data['engine'], errors='coerce')
 
-    # Filling Null values using Mode method coz mean and median isn't usefull to fill object type columns
-    df['seats'].fillna(df['seats'].mode()[0], inplace=True)
-    df['mileage'].fillna(df['mileage'].mode()[0], inplace=True)
-    df['max_power'].fillna(df['max_power'].mode()[0], inplace=True)
+    # Convert max_power to numeric (remove 'bhp')
+    data['max_power'] = data['max_power'].str.replace('bhp', '', regex=False)
+    data['max_power'] = pd.to_numeric(data['max_power'], errors='coerce')
 
-    # Filtering required names from complicated names
-    # For Max Power
-    name = []
-    for i in df['max_power']:
-        splt = i.split()[0]
-        name.append(splt)
+    # Convert mileage to numeric (remove 'kmpl', 'km/kg')
+    data['mileage'] = data['mileage'].str.replace('kmpl', '', regex=False)
+    data['mileage'] = data['mileage'].str.replace('km/kg', '', regex=False)
+    data['mileage'] = pd.to_numeric(data['mileage'], errors='coerce')
 
-    df['max_power'] = pd.Series(name)
+    # Handle missing values
+    for col in ['seats', 'mileage', 'max_power', 'engine']:
+        if data[col].isnull().any():
+            data[col].fillna(data[col].median(), inplace=True)
+    for col in ['fuel', 'seller_type', 'owner', 'transmission', 'brand']:
+        if data[col].isnull().any():
+            data[col].fillna(data[col].mode()[0], inplace=True)
 
-    # For Mileage
-    name = []
-    for i in df['mileage']:
-        splt = i.split()[0]
-        name.append(splt)
+    # Remove outliers in selling_price (keep 1st to 99th percentile)
+    lower = data['selling_price'].quantile(0.01)
+    upper = data['selling_price'].quantile(0.99)
+    data = data[(data['selling_price'] >= lower) & (data['selling_price'] <= upper)]
 
-    df['mileage'] = pd.Series(name)
+    # Encode categorical features
+    cat_cols = data.select_dtypes(include=['object']).columns
+    for col in cat_cols:
+        data[col] = LabelEncoder().fit_transform(data[col])
 
+    data['seats'] = data['seats'].astype(int)
 
-    # using Label encoder for encoding huge no of string values in object type columns
-    LE = LabelEncoder()
-    df[df.select_dtypes(include=['object']).columns] = df[df.select_dtypes(include=['object']).columns].apply(LE.fit_transform)
-    df['seats'] = df['seats'].astype(int)# typecasting Seats column float to int
-
-    # Storing values in X,y
-    y = df['selling_price']
-    X = df.drop(['selling_price'],axis=1)
-    
-    return X, y, df
+    # Features and target
+    y = data['selling_price']
+    X = data.drop(['selling_price', 'name', 'torque'], axis=1, errors='ignore')
+    return X, y, data
 
 # Creating a function for DataFrame
-@st.cache(hash_funcs={XGBRegressor: id})
+@st.cache_data
 def DataFrame():
-    df = load_data()[2]
-    df = pd.DataFrame(df)
-
-    return df
+    return load_data()[2]
