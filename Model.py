@@ -5,7 +5,7 @@ from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error, m
 from math import sqrt
 from prepro import load_data
 
-@st.cache
+@st.cache(allow_output_mutation=True)
 def load_trained_model():
     return joblib.load("xgb_model.pkl")
 
