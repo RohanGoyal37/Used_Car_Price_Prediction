@@ -375,6 +375,6 @@ Feel free to reach out for:
 
 **Stars help others discover the project and motivate continued development**
 
-Made with ❤️ and ☕ by Rohan Goyal
+Made with ❤️ and ☕ by [Rohan Goyal](https://www.linkedin.com/in/rohan-agarwal37)
 
 </div>
