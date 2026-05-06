@@ -2,11 +2,11 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 import seaborn as sns
-from prepro import DataFrame
+from prepro import load_data
 
 feature = ['year', 'km_driven', 'mileage', 'max_power', 'seats']
 def app(df):
-    df = DataFrame()
+    df = load_data()
 
     # Give title
     st.title("Visualize Data")
